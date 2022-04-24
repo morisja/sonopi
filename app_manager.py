@@ -11,26 +11,47 @@ import subprocess
 
 logger = structlog.get_logger()
 
-PLAYLISTS = [
-    {
-        "name": "Philly Soul",
-        "link": "https://open.spotify.com/playlist/37i9dQZF1DWYmZJhCzQOPD",
-    },
-    {
-        "name": "Classic Acoustic",
-        "link": "https://open.spotify.com/playlist/37i9dQZF1DX504r1DvyvxG",
-    },
-    {
-        "name": "Greta",
-        "link": "https://open.spotify.com/playlist/7yF49cwKHcWXbn0Xi504Yk",
-    },
-    {
-        "name": "Blues and Roots",
-        "link": "https://open.spotify.com/playlist/37i9dQZF1DWSKpvyAAcaNZ",
-    },
-]
+PLAYLISTS = sorted(
+    [
+        {
+            "name": "Philly Soul",
+            "link": "https://open.spotify.com/playlist/37i9dQZF1DWYmZJhCzQOPD",
+        },
+        {
+            "name": "Classic Acoustic",
+            "link": "https://open.spotify.com/playlist/37i9dQZF1DX504r1DvyvxG",
+        },
+        {
+            "name": "Greta",
+            "link": "https://open.spotify.com/playlist/7yF49cwKHcWXbn0Xi504Yk",
+        },
+        {
+            "name": "Blues and Roots",
+            "link": "https://open.spotify.com/playlist/37i9dQZF1DWSKpvyAAcaNZ",
+        },
+        {
+            "name": "Gamble & Huff",
+            "link": "https://open.spotify.com/playlist/37i9dQZF1DWXutrsZUdv7b"
+        },
+        {
+            "name": "Evening dinner with lover and friends",
+            "link": "https://open.spotify.com/playlist/4lnT8VECXVdwunurpgwyKL"
+        },
+        {
+            "name": "Stoner Rock",
+            "link": "https://open.spotify.com/playlist/2zwum1G8rCaRYCQ1blWflb"
+        },
+        {
+            "name": "The daily",
+            "link": "https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g"
+        }
+    ],
+    key=lambda i: (i["name"]),
+)
+
 
 DEFAULT_DEVICE_NAME = "Living Room"
+SONOS_BIN = "/home/pi/.local/bin/sonos"
 
 
 class ExecFailure(Exception):
@@ -41,13 +62,14 @@ class AppManager:
     def __init__(
         self,
         play_status,
-        volume,
+        volume: int,
         default_device,
         mode="CONTROL",
         playlists=PLAYLISTS,
-        playlist_pos=0,
+        playlist_pos: int = 0,
+        sonos_bin: str = SONOS_BIN,
     ):
-        self.sonos_bin = "/home/pi/.local/bin/sonos"
+        self.sonos_bin = sonos_bin
         self.default_device = default_device
         self.playlists = playlists
         self.playlist_pos = playlist_pos
@@ -91,6 +113,10 @@ class AppManager:
         index = share_link.add_share_link_to_queue(link)
         self.default_device.play_from_queue(index, start=True)
 
+        self.play_status = self.default_device.get_current_transport_info()[
+            "current_transport_state"
+        ]
+
     def _native_get_info(self):
         t = json.dumps(self.default_device.get_current_track_info(), indent=4)
         logger.info(f"track - {t}")
@@ -103,6 +129,11 @@ class AppManager:
         if self.play_status == "PLAYING":
             self.default_device.pause()
             self.play_status = "PAUSED_PLAYBACK"
+        elif self.play_status =="PAUSED_PLAYBACK":
+            self.default_device.play()
+            self.play_status = "PLAYING"
+        elif self.play_status == "TRANSITIONING":
+            self.play_status = self.default_device.get_current_transport_info()[            "current_transport_state"       ]
         else:
             self.default_device.play()
             self.play_status = "PLAYING"
@@ -138,8 +169,9 @@ class AppManager:
                 self.playlist_pos = self.playlist_pos - 1
                 print(self.playlists[self.playlist_pos]["name"])
         if self.mode == "VOLUME":
-            self.default_device.volume = self.default_device.volume - 1
-            logger.info(f"vol = {self.default_device.volume}")
+            new_vol=self.default_device.volume - 3
+            self.default_device.volume = new_vol
+            logger.info(f"vol = {new_vol}")
 
     def scroll_right(self):
         if self.mode == "CONTROL":
@@ -147,8 +179,9 @@ class AppManager:
                 self.playlist_pos = self.playlist_pos + 1
                 print(self.playlists[self.playlist_pos]["name"])
         if self.mode == "VOLUME":
-            self.default_device.volume = self.default_device.volume + 1
-            logger.info(f"vol = {self.default_device.volume}")
+            new_vol=self.default_device.volume + 3
+            self.default_device.volume = new_vol
+            logger.info(f"vol = {new_vol}")
 
     def press_select(self):
         self._native_play_uri()

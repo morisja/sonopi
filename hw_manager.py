@@ -1,3 +1,4 @@
+from typing import Callable
 from RPi import GPIO
 from time import sleep
 import sys
@@ -28,14 +29,14 @@ SWITCHES = [
 class HardwareManager:
     def __init__(
         self,
-        clk_state,
-        dt_state,
-        sw_state,
-        k1_state,
-        k2_state,
-        k3_state,
-        k4_state,
-        counter=0,
+        clk_state: int,
+        dt_state: int,
+        sw_state: int,
+        k1_state: int,
+        k2_state: int,
+        k3_state: int,
+        k4_state: int,
+        counter: int = 0,
     ):
         self.counter = counter
         self.last_clk_state = clk_state
@@ -51,7 +52,7 @@ class HardwareManager:
         self.time_s = int(time.time())
         self.last_print = self.time_s
 
-    def read_scroll(self, clk_state, dt_state):
+    def read_scroll(self, clk_state: int, dt_state: int):
         action = "99"
         if clk_state != self.last_clk_state:
             if dt_state != clk_state:
@@ -63,7 +64,7 @@ class HardwareManager:
         self.last_clk_state = clk_state
         return action
 
-    def read_switch(self, name, state):
+    def read_switch(self, name: str, state: int):
         # 0 on press
         return_state = 1
         if state != self.last_switch[name]:
@@ -71,21 +72,21 @@ class HardwareManager:
         self.last_switch[name] = state
         return return_state
 
-    def log_track_info(self, fn_info):
+    def log_track_info(self, fn_info: Callable):
         if self.time_s % 10 == 0 and self.last_print != self.time_s:
             self.last_print = self.time_s
             fn_info()
 
     def bind_and_run(
         self,
-        fn_scroll_right,
-        fn_scroll_left,
-        fn_select,
-        fn_press_k1,
-        fn_press_k2,
-        fn_press_k3,
-        fn_press_k4,
-        fn_info,
+        fn_scroll_right: Callable,
+        fn_scroll_left: Callable,
+        fn_select: Callable,
+        fn_press_k1: Callable,
+        fn_press_k2: Callable,
+        fn_press_k3: Callable,
+        fn_press_k4: Callable,
+        fn_info: Callable,
     ):
         while True:
             s = self.read_scroll(GPIO.input(clk), GPIO.input(dt))
@@ -107,7 +108,7 @@ class HardwareManager:
             self.time_s = int(time.time())
             self.log_track_info(fn_info)
 
-    def _dump_counter(self, clk_state, dt_state):
+    def _dump_counter(self, clk_state: int, dt_state: int):
         if clk_state != self.last_clk_state:
             if dt_state != clk_state:
                 self.counter += 1
@@ -116,7 +117,7 @@ class HardwareManager:
             print(self.counter)
         self.last_clk_state = clk_state
 
-    def _dump_switch(self, name, state):
+    def _dump_switch(self, name: str, state: int):
         if state != self.last_switch[name]:
             print(f"{name} state {state}")
         self.last_switch[name] = state
