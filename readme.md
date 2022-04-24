@@ -1,7 +1,6 @@
 Intro
 
-play/pause
+play / pause
 next
 prev
 mode
-

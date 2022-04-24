@@ -72,8 +72,8 @@ class HardwareManager:
         self.last_switch[name] = state
         return return_state
 
-    def log_track_info(self, fn_info: Callable):
-        if self.time_s % 10 == 0 and self.last_print != self.time_s:
+    def log_track_info(self, fn_info: Callable, interval: int = 10):
+        if self.time_s % interval == 0 and self.last_print != self.time_s:
             self.last_print = self.time_s
             fn_info()
 

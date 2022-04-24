@@ -31,20 +31,20 @@ PLAYLISTS = sorted(
         },
         {
             "name": "Gamble & Huff",
-            "link": "https://open.spotify.com/playlist/37i9dQZF1DWXutrsZUdv7b"
+            "link": "https://open.spotify.com/playlist/37i9dQZF1DWXutrsZUdv7b",
         },
         {
             "name": "Evening dinner with lover and friends",
-            "link": "https://open.spotify.com/playlist/4lnT8VECXVdwunurpgwyKL"
+            "link": "https://open.spotify.com/playlist/4lnT8VECXVdwunurpgwyKL",
         },
         {
             "name": "Stoner Rock",
-            "link": "https://open.spotify.com/playlist/2zwum1G8rCaRYCQ1blWflb"
+            "link": "https://open.spotify.com/playlist/2zwum1G8rCaRYCQ1blWflb",
         },
         {
             "name": "The daily",
-            "link": "https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g"
-        }
+            "link": "https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g",
+        },
     ],
     key=lambda i: (i["name"]),
 )
@@ -129,11 +129,13 @@ class AppManager:
         if self.play_status == "PLAYING":
             self.default_device.pause()
             self.play_status = "PAUSED_PLAYBACK"
-        elif self.play_status =="PAUSED_PLAYBACK":
+        elif self.play_status == "PAUSED_PLAYBACK":
             self.default_device.play()
             self.play_status = "PLAYING"
         elif self.play_status == "TRANSITIONING":
-            self.play_status = self.default_device.get_current_transport_info()[            "current_transport_state"       ]
+            self.play_status = self.default_device.get_current_transport_info()[
+                "current_transport_state"
+            ]
         else:
             self.default_device.play()
             self.play_status = "PLAYING"
@@ -163,15 +165,23 @@ class AppManager:
         sleep(0.1)
         pos = self._exec_sonos(["Living Room", "play_from_queue", str(play_next)])
 
+    def manage_volume(self, n: int):
+        new_vol = self.volume + n
+        if new_vol < 0:
+            new_vol = 0
+        if new_vol > 100:
+            new_vol = 100
+        self.default_device.volume = new_vol
+        self.volume = new_vol
+        logger.info(f"vol = {self.volume}")
+
     def scroll_left(self):
         if self.mode == "CONTROL":
             if self.playlist_pos > 0:
                 self.playlist_pos = self.playlist_pos - 1
                 print(self.playlists[self.playlist_pos]["name"])
         if self.mode == "VOLUME":
-            new_vol=self.default_device.volume - 3
-            self.default_device.volume = new_vol
-            logger.info(f"vol = {new_vol}")
+            self.manage_volume(-3)
 
     def scroll_right(self):
         if self.mode == "CONTROL":
@@ -179,9 +189,7 @@ class AppManager:
                 self.playlist_pos = self.playlist_pos + 1
                 print(self.playlists[self.playlist_pos]["name"])
         if self.mode == "VOLUME":
-            new_vol=self.default_device.volume + 3
-            self.default_device.volume = new_vol
-            logger.info(f"vol = {new_vol}")
+            self.manage_volume(+3)
 
     def press_select(self):
         self._native_play_uri()
