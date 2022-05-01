@@ -102,8 +102,7 @@ class TextDisplay:
             else:
                 p.append(" ")
                         
-        i=0print(x._volume())
-
+        i=0
         #split that list by row
         for y in range(0,ymax):
             xrow=[]
@@ -120,11 +119,12 @@ class TextDisplay:
 t=TextDisplay(9)
 
 st=time.time()
-frames=9*20
+frames=100
+total_render=0
+total_display=0
 for p in range(1,frames):
     img = Image.new('RGB', (WIDTH, HEIGHT), color=(0, 0, 0))
     draw = ImageDraw.Draw(img)
-    draw.rectangle((2, 2, WIDTH - 2, HEIGHT - 2), outline=(255, 255, 0), fill=(0, 0, 0))
 
     # Write two lines of white text on the buffer, rotated 90 degrees counter clockwise.
     #draw_rotated_text(img, 'Hello World!', (0, 0), 90, font, fill=(255, 255, 255))
@@ -135,14 +135,24 @@ for p in range(1,frames):
     #    draw_rotated_text(img, f"{p} This is a line of text.", (10, n*10*2), 0, font, fill=(255, 255, 255))
     e=time.time()
     d=e-b
+    total_render+=d
     summary.append(f"text gen {d}")
 
     # Write buffer to display hardware, must be called to make things visible on the
     # display!
+    b=time.time()
     disp.display(img)
+    e=time.time()
+    d=e-b
+    summary.append(f"display time {d}")
+    total_display+=d
 et=time.time()
 
 fps = frames/(et-st)
-for s in summary:
-    print(s)
+#for s in summary:
+#    print(s)
 print(f"fps {fps}")
+print(f"total gen {total_render/frames}")
+print(f"total display {total_display/frames}")
+
+
