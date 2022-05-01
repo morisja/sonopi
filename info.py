@@ -1,19 +1,14 @@
 import soco
 import sys
 import pdb
+from soco.plugins.sharelink import ShareLinkPlugin
 
 devices = {device.player_name: device for device in soco.discover()}
+x=devices['Living Room']
 
 
-x = devices["Living Room"].all_groups
-print(x)
-devices["Living Room"].partymode()
-x = devices["Living Room"].all_groups
-print(x)
-x = devices["Living Room"].group.coordinator
-print(x)
-print(x.volume)
-
+share_link = ShareLinkPlugin(x)
+pdb.set_trace()
 
 sys.exit(0)
 print("current state")
@@ -24,4 +19,5 @@ for n, d in devices.items():
 for n, d in devices.items():
     d.unjoin()
 
-print(devices["Living Room"].all_groups)
+print(devices['Living Room'].all_groups)
+

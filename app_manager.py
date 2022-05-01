@@ -1,4 +1,3 @@
-from email.utils import parseaddr
 from time import sleep
 from soco import discover
 from soco.plugins.sharelink import ShareLinkPlugin
@@ -6,8 +5,6 @@ import structlog
 import logging
 import json
 
-# initial state
-import subprocess
 
 logger = structlog.get_logger()
 
@@ -42,22 +39,14 @@ PLAYLISTS = sorted(
             "link": "https://open.spotify.com/playlist/2zwum1G8rCaRYCQ1blWflb",
         },
         {
-            "name": "The daily",
+            "name": "The Daily",
             "link": "https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g",
         },
     ],
     key=lambda i: (i["name"]),
 )
 
-
 DEFAULT_DEVICE_NAME = "Living Room"
-SONOS_BIN = "/home/pi/.local/bin/sonos"
-
-
-class ExecFailure(Exception):
-    pass
-
-
 class AppManager:
     def __init__(
         self,
@@ -67,27 +56,13 @@ class AppManager:
         mode="CONTROL",
         playlists=PLAYLISTS,
         playlist_pos: int = 0,
-        sonos_bin: str = SONOS_BIN,
     ):
-        self.sonos_bin = sonos_bin
         self.default_device = default_device
         self.playlists = playlists
         self.playlist_pos = playlist_pos
         self.play_status = play_status
         self.volume = volume
         self.mode = mode
-
-    def _exec_cmd(self, cmd):
-        logger.info(cmd)
-        ret = subprocess.run(cmd, capture_output=True)
-        if ret.returncode != 0:
-            raise ExecFailure()
-        s = ret.stdout.decode().rstrip()
-        logger.info(s)
-        return s
-
-    def _exec_sonos(self, args):
-        return self._exec_cmd([self.sonos_bin] + args)
 
     def _native_pause(self):
         logger.info("pause")
@@ -118,12 +93,10 @@ class AppManager:
         ]
 
     def _native_get_info(self):
-        t = json.dumps(self.default_device.get_current_track_info(), indent=4)
-        logger.info(f"track - {t}")
-        t = json.dumps(self.default_device.get_current_transport_info(), indent=4)
-        logger.info(f"status - {t}")
-        v = json.dumps(self.default_device.volume, indent=4)
-        logger.info(f"volume - {v}")
+        t = self.default_device.get_current_track_info()
+        logger.info(f"track - {t['artist']} - {t['title']} - {t['position']}")
+        t = self.default_device.get_current_transport_info()
+        logger.info(f"status - {t['current_transport_status']} {t['current_transport_state']}")
 
     def _native_toggle_play_pause(self):
         if self.play_status == "PLAYING":
@@ -151,20 +124,6 @@ class AppManager:
     def info(self):
         self._native_get_info()
 
-    def pause(self):
-        self._exec_sonos(["Living Room", "pause"])
-
-    def play(self):
-        self._exec_sonos(["Living Room", "play"])
-
-    def set_playlist(self):
-        pos = self._exec_sonos(
-            ["Living Room", "sharelink", self.playlists[self.playlist_pos]["link"]]
-        )
-        play_next = int(pos)
-        sleep(0.1)
-        pos = self._exec_sonos(["Living Room", "play_from_queue", str(play_next)])
-
     def manage_volume(self, n: int):
         new_vol = self.volume + n
         if new_vol < 0:
@@ -172,8 +131,12 @@ class AppManager:
         if new_vol > 100:
             new_vol = 100
         self.default_device.volume = new_vol
+        if n > 0:
+            action="up"
+        else:
+            action="down"
         self.volume = new_vol
-        logger.info(f"vol = {self.volume}")
+        logger.info(f"vol = {self.volume} {action}")
 
     def scroll_left(self):
         if self.mode == "CONTROL":
@@ -189,7 +152,7 @@ class AppManager:
                 self.playlist_pos = self.playlist_pos + 1
                 print(self.playlists[self.playlist_pos]["name"])
         if self.mode == "VOLUME":
-            self.manage_volume(+3)
+            self.manage_volume(3)
 
     def press_select(self):
         self._native_play_uri()
