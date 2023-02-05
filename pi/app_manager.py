@@ -143,7 +143,7 @@ class AppManager:
             if self.playlist_pos > 0:
                 self.playlist_pos = self.playlist_pos - 1
                 print(self.playlists[self.playlist_pos]["name"])
-        if self.mode == "VOLUME":
+        if selfprint(x._volume()).mode == "VOLUME":
             self.manage_volume(-3)
 
     def scroll_right(self):
