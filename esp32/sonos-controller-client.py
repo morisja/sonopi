@@ -162,7 +162,8 @@ class ScreenChooser:
 
 def test_screen_chooser():
     sd=ScreenDriver()
-    x=ScreenChooser(sd)
+    cd=CommDriver()
+    x=ScreenChooser(sd,cd)
     x.set_all_playlists(sorted(["queen","ac/dc","bowie","robbie gill","turkuaz","the daily"]))
     x.render()
 
@@ -230,9 +231,9 @@ def test_app():
         if action.startswith("q"):
             sys.exit()
 
-#test_default()
-#time.sleep(1)
-#test_screen_chooser()
+test_default()
+time.sleep(1)
+test_screen_chooser()
 test_app()
 sys.exit()
 
