@@ -1,0 +1,61 @@
+#!/bin/bash -e
+
+action=$1
+sc="/home/jamesm/.local/bin/sonos LivingRoom"
+
+play_music(){
+    local u=$1
+    $sc clear_queue
+    $sc add_sharelink_to_queue $u
+    $sc play_mode SHUFFLE
+    $sc play_from_queue last_added
+}
+
+play_podcast(){
+    local u=$1
+    $sc clear_queue
+    $sc play_mode NORMAL
+    $sc add_sharelink_to_queue $u 
+    $sc play_from_queue last_added
+}
+
+case $action in
+
+  stop)
+    $sc stop
+    ;;
+  start)
+    $sc start
+    ;;
+  vol)
+    $sc volume $2
+    ;;
+  next)
+    $sc next
+    ;;
+  prev)
+    $sc prev
+    ;;
+  classicacoustic)
+    play_podcast https://open.spotify.com/playlist/37i9dQZF1DX504r1DvyvxG
+    ;;
+  daily)
+    play_podcast https://open.spotify.com/show/3IM0lmZxpFAY7CwMuv9H4g
+    ;;
+  gamblehuff)
+    play_music https://open.spotify.com/playlist/37i9dQZF1DWXutrsZUdv7b
+    ;;
+  philly)
+    play_music https://open.spotify.com/playlist/37i9dQZF1DWYmZJhCzQOPD
+    ;;
+  eveningdinner)
+    play_music https://open.spotify.com/playlist/4lnT8VECXVdwunurpgwyKL
+    ;;
+
+  *)
+    "unknown"
+    exit 1
+    ;;
+esac
+
+echo success
